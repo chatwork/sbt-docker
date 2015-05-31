@@ -32,7 +32,11 @@ object SbtDockerPlugin extends AutoPlugin {
     templateContext in docker := Map(
       "name" -> (name in thisProjectRef).value,
       "version" -> (version in thisProjectRef).value
-    )
+    ),
+    push in docker <<= dockerPushTask,
+    pull in docker <<= dockerPullTask,
+    list in docker <<= dockerListImagesTask,
+    start in docker <<= dockerStartTask
   )
 
 }

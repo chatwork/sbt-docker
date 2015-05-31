@@ -1,27 +1,42 @@
 package com.chatwork.sbt.docker
 
+import java.text.SimpleDateFormat
+
 import com.chatwork.sbt.docker.SbtDockerKeys._
-import com.spotify.docker.client.messages.{ AuthConfig, ProgressMessage }
-import com.spotify.docker.client.{ ProgressHandler, DefaultDockerClient }
-import com.spotify.docker.client.DockerClient.BuildParameter
+import com.spotify.docker.client.DockerClient.{ BuildParameter, ListImagesParam }
+import com.spotify.docker.client.messages.{ AuthConfig, ContainerConfig, ProgressMessage }
+import com.spotify.docker.client.{ DefaultDockerClient, DockerDateFormat, DockerException, ProgressHandler }
 import sbt.Keys._
 import sbt._
-import Keys._
+
+import scala.collection.JavaConverters._
 import scala.util.Try
 
 object SbtDocker extends SbtDocker
 
 trait SbtDocker {
 
+  lazy val authConfig = Def.task {
+    val e = (emailAddress in docker).value
+    val p = (password in docker).value
+    val u = (userName in docker).value
+    AuthConfig.builder().username(u).email(e).password(p).build()
+  }
+
   lazy val dockerClient = Def.task {
     if ((login in docker).value) {
-      val e = (emailAddress in docker).value
-      val p = (password in docker).value
-      val u = (userName in docker).value
-      val authConfig = AuthConfig.builder().username(u).email(e).password(p).build()
-      DefaultDockerClient.fromEnv().authConfig(authConfig).build()
+      DefaultDockerClient.fromEnv().authConfig(authConfig.value).build()
     } else {
       DefaultDockerClient.fromEnv().build()
+    }
+  }
+
+  lazy val progressHandler = Def.task {
+    val logger = streams.value.log
+    new ProgressHandler() {
+      override def progress(progressMessage: ProgressMessage): Unit = {
+        logger.info(progressMessage.stream())
+      }
     }
   }
 
@@ -75,21 +90,67 @@ trait SbtDocker {
     }
   }
 
+  def dockerPushTask: Def.Initialize[Task[Unit]] = Def.task {
+    val logger = streams.value.log
+    val repositoryName = (name in docker).value
+    Try {
+      dockerClient.value.push(repositoryName, progressHandler.value)
+    }.recover {
+      case ex: DockerException =>
+        logger.error(ex.toString)
+    }.get
+  }
+
+  def dockerPullTask: Def.Initialize[Task[Unit]] = Def.task {
+    val logger = streams.value.log
+    val repositoryName = (name in docker).value
+    Try {
+      if ((login in docker).value) {
+        dockerClient.value.pull(repositoryName, authConfig.value, progressHandler.value)
+      } else {
+        dockerClient.value.pull(repositoryName, progressHandler.value)
+      }
+    }.recover {
+      case ex: DockerException =>
+        logger.error(ex.toString)
+    }.get
+  }
+
+  def dockerListImagesTask: Def.Initialize[Task[Unit]] = Def.task {
+    val logger = streams.value.log
+    val result = dockerClient.value.listImages(ListImagesParam.allImages())
+    val sdf = new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ss")
+    val df = new DockerDateFormat()
+    result.asScala.foreach { image =>
+      val id = image.id()
+      val created = image.created()
+      val ts = df.parse(created)
+      val timestamp = sdf.format(ts)
+      val repoTags = image.repoTags()
+      val size = image.size()
+      val virtualSize = image.virtualSize()
+      logger.info("%s, %10s, %10d, %10d, %s".format(id, repoTags.asScala.mkString(":"), size, virtualSize, timestamp))
+    }
+  }
+
+  def dockerStartTask: Def.Initialize[Task[Unit]] = Def.task {
+    dockerBuildTask.value.foreach { imageId =>
+      val config = ContainerConfig.builder().image(imageId).build()
+      dockerClient.value.createContainer(config)
+    }
+  }
+
   def dockerBuildTask: Def.Initialize[Task[Option[String]]] = Def.task {
     val logger = streams.value.log
     val workDir = (buildDirectory in docker).value.toPath
     val repositoryName = (name in docker).value
     val bo = (buildOptions in docker).value.map(toBuildParameter)
     Try {
-      val result = dockerClient.value.build(workDir, repositoryName, new ProgressHandler() {
-        override def progress(progressMessage: ProgressMessage): Unit = {
-          logger.info(progressMessage.stream())
-        }
-      }, bo.toArray: _*)
+      val result = dockerClient.value.build(workDir, repositoryName, progressHandler.value, bo.toArray: _*)
       logger.info(s"imageId = $result")
       Some(result)
     }.recover {
-      case ex: com.spotify.docker.client.DockerException =>
+      case ex: DockerException =>
         logger.error(ex.toString)
         None
     }.get

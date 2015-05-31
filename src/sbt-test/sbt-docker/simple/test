@@ -1,3 +1,5 @@
 > clean
 
 > docker::build
+
+> docker::start
