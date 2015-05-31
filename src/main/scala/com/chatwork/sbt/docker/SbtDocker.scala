@@ -25,6 +25,21 @@ trait SbtDocker {
     }
   }
 
+  def generateDockerfileTask: Def.Initialize[Task[File]] = Def.task {
+    val logger = streams.value.log
+    val c = (templateContext in docker).value
+    val t = (dockerfileTemplate in docker).value
+    val df = (dockerfile in docker).value
+    if (t.exists()) {
+      logger.info("generate docker file from template file.")
+      new DockerfileFreemakerBuilder(t.getParentFile, t.base, c, df).build.get
+      logger.info("generated docker file from template file.")
+      df
+    } else {
+      df
+    }
+  }
+
   def cleanSourceFilesTask: Def.Initialize[Task[Unit]] = Def.task {
     val logger = streams.value.log
     val dst = (buildDirectory in docker).value
@@ -38,7 +53,7 @@ trait SbtDocker {
     val dst = (buildDirectory in docker).value
     val src = (sourceDirectory in docker).value
 
-    val files = (sourceFiles in docker).value.map { file =>
+    val files = ((sourceFiles in docker).value :+ generateDockerfileTask.value).map { file =>
       (file, dst / IO.relativize(src, file).get)
     }
 

@@ -26,7 +26,13 @@ object SbtDockerPlugin extends AutoPlugin {
     password in docker := "",
     buildOptions in docker := Set.empty[BuildOptions.Value],
     build in docker <<= dockerBuildTask dependsOn (copySourceFiles in docker),
-    copySourceFiles in docker <<= copySourceFilesTask
+    copySourceFiles in docker <<= copySourceFilesTask,
+    dockerfileTemplate in docker := (sourceDirectory in docker).value / "Dockerfile.ftl",
+    dockerfile in docker := (sourceDirectory in docker).value / "Dockerfile",
+    templateContext in docker := Map(
+      "name" -> (name in thisProjectRef).value,
+      "version" -> (version in thisProjectRef).value
+    )
   )
 
 }

@@ -26,4 +26,10 @@ trait SbtDockerKeys {
 
   val buildDirectory = settingKey[File]("build-directory")
 
+  val dockerfileTemplate = settingKey[File]("dockerfile-template")
+
+  val dockerfile = settingKey[File]("dockerfile")
+
+  val templateContext = settingKey[Map[String, String]]("template-context")
+
 }
