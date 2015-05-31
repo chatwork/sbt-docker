@@ -20,8 +20,13 @@ object SbtDockerPlugin extends AutoPlugin {
     sourceDirectory in docker := baseDirectory.value / "docker",
     buildDirectory in docker := baseDirectory.value / "target" / "docker",
     sourceFiles in docker := Seq(),
-    build in docker <<= dockerBuildTask dependsOn(copySourceFiles in docker),
-    copySourceFiles in docker  <<= copySourceFilesTask
+    login in docker := false,
+    emailAddress in docker := "",
+    userName in docker := "",
+    password in docker := "",
+    buildOptions in docker := Set.empty[BuildOptions.Value],
+    build in docker <<= dockerBuildTask dependsOn (copySourceFiles in docker),
+    copySourceFiles in docker <<= copySourceFilesTask
   )
 
 }

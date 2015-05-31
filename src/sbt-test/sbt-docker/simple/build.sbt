@@ -1,3 +1,5 @@
+import com.chatwork.sbt.docker.BuildOptions._
+
 name := "simple"
 
 name in docker := "test"
@@ -9,6 +11,8 @@ sourceFiles in docker := {
     src / "bin" / "date.sh"
   )
 }
+
+buildOptions in docker := Set(ForceRm)
 
 libraryDependencies ++= Seq(
 )
