@@ -5,7 +5,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.spotify.docker.client" level="INFO"/>
+    <logger name="com.spotify.docker.client" level="WARN"/>
 
     <root level="INFO">
         <appender-ref ref="STDOUT" />
