@@ -1,19 +1,17 @@
-import sbt.ScriptedPlugin._
-
 import scalariform.formatter.preferences._
 
 scalaVersion := "2.10.5"
 
 sonatypeProfileName := "com.chatwork"
 
-organization in ThisBuild := "com.chatwork"
+organization := "com.chatwork"
 
 publishMavenStyle := true
 
 publishArtifact in Test := false
 
 pomIncludeRepository := {
-    _ => false
+  _ => false
 }
 
 pomExtra := {
@@ -48,6 +46,9 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
+  "com.spotify" % "docker-client" % "2.7.7",
+  "ch.qos.logback" % "logback-classic" % "1.1.3",
+  "org.slf4j" % "slf4j-api" % "1.7.12"
 )
 
 scalariformSettings
