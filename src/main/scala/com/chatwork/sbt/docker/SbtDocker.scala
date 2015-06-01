@@ -3,9 +3,10 @@ package com.chatwork.sbt.docker
 import java.text.SimpleDateFormat
 
 import com.chatwork.sbt.docker.SbtDockerKeys._
-import com.spotify.docker.client.DockerClient.{ BuildParameter, ListImagesParam }
-import com.spotify.docker.client.messages.{ AuthConfig, ContainerConfig, ProgressMessage }
-import com.spotify.docker.client.{ DefaultDockerClient, DockerDateFormat, DockerException, ProgressHandler }
+import com.google.common.base.Charsets
+import com.spotify.docker.client.DockerClient.{AttachParameter, BuildParameter, ListImagesParam}
+import com.spotify.docker.client._
+import com.spotify.docker.client.messages.{AuthConfig, ContainerConfig, ProgressMessage}
 import sbt.Keys._
 import sbt._
 
@@ -83,18 +84,19 @@ trait SbtDocker {
 
   def toBuildParameter(bo: BuildOptions.Value): BuildParameter = {
     bo match {
-      case BuildOptions.Quiet   => BuildParameter.QUIET
+      case BuildOptions.Quiet => BuildParameter.QUIET
       case BuildOptions.NoCache => BuildParameter.NO_CACHE
-      case BuildOptions.NoRm    => BuildParameter.NO_RM
+      case BuildOptions.NoRm => BuildParameter.NO_RM
       case BuildOptions.ForceRm => BuildParameter.FORCE_RM
     }
   }
 
   def dockerPushTask: Def.Initialize[Task[Unit]] = Def.task {
     val logger = streams.value.log
+    val sut = dockerClient.value
     val repositoryName = (name in docker).value
     Try {
-      dockerClient.value.push(repositoryName, progressHandler.value)
+      sut.push(repositoryName, progressHandler.value)
     }.recover {
       case ex: DockerException =>
         logger.error(ex.toString)
@@ -103,12 +105,13 @@ trait SbtDocker {
 
   def dockerPullTask: Def.Initialize[Task[Unit]] = Def.task {
     val logger = streams.value.log
+    val sut = dockerClient.value
     val repositoryName = (name in docker).value
     Try {
       if ((login in docker).value) {
-        dockerClient.value.pull(repositoryName, authConfig.value, progressHandler.value)
+        sut.pull(repositoryName, authConfig.value, progressHandler.value)
       } else {
-        dockerClient.value.pull(repositoryName, progressHandler.value)
+        sut.pull(repositoryName, progressHandler.value)
       }
     }.recover {
       case ex: DockerException =>
@@ -118,7 +121,8 @@ trait SbtDocker {
 
   def dockerListImagesTask: Def.Initialize[Task[Unit]] = Def.task {
     val logger = streams.value.log
-    val result = dockerClient.value.listImages(ListImagesParam.allImages())
+    val sut = dockerClient.value
+    val result = sut.listImages(ListImagesParam.allImages())
     val sdf = new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ss")
     val df = new DockerDateFormat()
     result.asScala.foreach { image =>
@@ -134,19 +138,42 @@ trait SbtDocker {
   }
 
   def dockerStartTask: Def.Initialize[Task[Unit]] = Def.task {
+    val logger = streams.value.log
+    val sut = dockerClient.value
     dockerBuildTask.value.foreach { imageId =>
       val config = ContainerConfig.builder().image(imageId).build()
-      dockerClient.value.createContainer(config)
+      val containerCreation = sut.createContainer(config)
+      sut.startContainer(containerCreation.id)
+      var logStream: LogStream = null
+      try {
+        logStream = sut.attachContainer(
+          containerCreation.id,
+          AttachParameter.LOGS,
+          AttachParameter.STDOUT,
+          AttachParameter.STDERR,
+          AttachParameter.STREAM
+        )
+        while (logStream.hasNext) {
+          val logMessage = logStream.next
+          val content = Charsets.UTF_8.decode(logMessage.content())
+          logger.info(s"containerId = ${containerCreation.id}, out = ${content}")
+        }
+      } finally {
+        if (logStream != null)
+          logStream.close()
+      }
+      sut.waitContainer(containerCreation.id)
     }
   }
 
   def dockerBuildTask: Def.Initialize[Task[Option[String]]] = Def.task {
     val logger = streams.value.log
+    val sut = dockerClient.value
     val workDir = (buildDirectory in docker).value.toPath
     val repositoryName = (name in docker).value
     val bo = (buildOptions in docker).value.map(toBuildParameter)
     Try {
-      val result = dockerClient.value.build(workDir, repositoryName, progressHandler.value, bo.toArray: _*)
+      val result = sut.build(workDir, repositoryName, progressHandler.value, bo.toArray: _*)
       logger.info(s"imageId = $result")
       Some(result)
     }.recover {
