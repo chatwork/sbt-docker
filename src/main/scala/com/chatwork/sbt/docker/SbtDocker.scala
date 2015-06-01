@@ -4,13 +4,16 @@ import java.text.SimpleDateFormat
 
 import com.chatwork.sbt.docker.SbtDockerKeys._
 import com.google.common.base.Charsets
-import com.spotify.docker.client.DockerClient.{AttachParameter, BuildParameter, ListImagesParam}
+import com.spotify.docker.client.DockerClient.{ AttachParameter, BuildParameter, ListImagesParam }
 import com.spotify.docker.client._
-import com.spotify.docker.client.messages.{AuthConfig, ContainerConfig, ProgressMessage}
+import com.spotify.docker.client.messages.{ AuthConfig, ContainerConfig, ProgressMessage }
 import sbt.Keys._
 import sbt._
 
 import scala.collection.JavaConverters._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
+import scala.concurrent.{ Await, Future }
 import scala.util.Try
 
 object SbtDocker extends SbtDocker
@@ -84,9 +87,9 @@ trait SbtDocker {
 
   def toBuildParameter(bo: BuildOptions.Value): BuildParameter = {
     bo match {
-      case BuildOptions.Quiet => BuildParameter.QUIET
+      case BuildOptions.Quiet   => BuildParameter.QUIET
       case BuildOptions.NoCache => BuildParameter.NO_CACHE
-      case BuildOptions.NoRm => BuildParameter.NO_RM
+      case BuildOptions.NoRm    => BuildParameter.NO_RM
       case BuildOptions.ForceRm => BuildParameter.FORCE_RM
     }
   }
@@ -137,32 +140,42 @@ trait SbtDocker {
     }
   }
 
-  def dockerStartTask: Def.Initialize[Task[Unit]] = Def.task {
+  def dockerStartTask: Def.Initialize[Task[Option[Future[String]]]] = Def.task {
     val logger = streams.value.log
     val sut = dockerClient.value
-    dockerBuildTask.value.foreach { imageId =>
+    dockerBuildTask.value.map { imageId =>
       val config = ContainerConfig.builder().image(imageId).build()
       val containerCreation = sut.createContainer(config)
       sut.startContainer(containerCreation.id)
-      var logStream: LogStream = null
-      try {
-        logStream = sut.attachContainer(
-          containerCreation.id,
-          AttachParameter.LOGS,
-          AttachParameter.STDOUT,
-          AttachParameter.STDERR,
-          AttachParameter.STREAM
-        )
-        while (logStream.hasNext) {
-          val logMessage = logStream.next
-          val content = Charsets.UTF_8.decode(logMessage.content())
-          logger.info(s"containerId = ${containerCreation.id}, out = ${content}")
+      Future {
+        var logStream: LogStream = null
+        try {
+          logStream = sut.attachContainer(
+            containerCreation.id,
+            AttachParameter.LOGS,
+            AttachParameter.STDOUT,
+            AttachParameter.STDERR,
+            AttachParameter.STREAM
+          )
+          while (logStream.hasNext) {
+            val logMessage = logStream.next
+            val content = Charsets.UTF_8.decode(logMessage.content())
+            logger.info(s"containerId = ${containerCreation.id}, out = ${content}")
+          }
+        } finally {
+          if (logStream != null)
+            logStream.close()
         }
-      } finally {
-        if (logStream != null)
-          logStream.close()
+        containerCreation.id
       }
-      sut.waitContainer(containerCreation.id)
+    }
+  }
+
+  def dockerStartAndWaitTask: Def.Initialize[Task[Unit]] = Def.task {
+    val sut = dockerClient.value
+    dockerStartTask.value.map { future =>
+      val id = Await.result(future, Duration.Inf)
+      sut.waitContainer(id)
     }
   }
 

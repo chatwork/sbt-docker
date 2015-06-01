@@ -36,7 +36,8 @@ object SbtDockerPlugin extends AutoPlugin {
     push in docker <<= dockerPushTask,
     pull in docker <<= dockerPullTask,
     list in docker <<= dockerListImagesTask,
-    start in docker <<= dockerStartTask
+    start in docker <<= dockerStartTask dependsOn (copySourceFiles in docker),
+    startAndWait in docker <<= dockerStartAndWaitTask dependsOn (copySourceFiles in docker)
   )
 
 }

@@ -2,6 +2,8 @@ package com.chatwork.sbt.docker
 
 import sbt._
 
+import scala.concurrent.Future
+
 object SbtDockerKeys extends SbtDockerKeys
 
 trait SbtDockerKeys {
@@ -46,6 +48,8 @@ trait SbtDockerKeys {
 
   val list = taskKey[Unit]("list")
 
-  val start = taskKey[Unit]("run")
+  val start = taskKey[Option[Future[String]]]("start")
+
+  val startAndWait = taskKey[Unit]("start-and-wait")
 
 }
