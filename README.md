@@ -22,7 +22,7 @@ addSbtPlugin("com.chatwork" % "sbt-docker" % "1.0.0")
 ```scala
 resolvers += "Sonatype OSS Snapshot Repository" at "https://oss.sonatype.org/content/repositories/snapshots/"
 
-addSbtPlugin("com.chatwork" % "sbt-docker" % "1.0.0-SNAPSHOT")
+addSbtPlugin("com.chatwork" % "sbt-docker" % "1.0.1-SNAPSHOT")
 ```
 
 ## Usage
