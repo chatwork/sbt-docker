@@ -136,7 +136,7 @@ $ sbt docker::pull
 
 
 
-### Dockerfile template support
+### Dockerfile template support by Freemarker
 
 - Put Dockefile.ftl to source directory.
 
