@@ -53,3 +53,47 @@ If you want to set `--form-rm=true` option, `BuildOptions` will be as follow.
 ```scala
 BuildOptions in docker := Seq(ForceRm)
 ```
+
+#### Start
+
+```sh
+$ sbt
+> docker::start
+info] Set(/Users/cw-junichi/sbt-docker/src/sbt-test/sbt-docker/simple/target/docker/Dockerfile, /Users/cw-junichi/sbt-docker/src/sbt-test/sbt-docker/simple/target/docker/bin/date.sh)
+[info] Step 0 : FROM busybox
+[info]  ---> 8c2e06607696
+[info] Step 1 : ADD bin/date.sh /
+[info]  ---> 17611e6f5cd4
+[info] Removing intermediate container 38cc4a3c1eac
+[info] Step 2 : CMD sh /date.sh
+[info]  ---> Running in 9f5aa473c4f8
+[info]  ---> 8fdbc30fb900
+[info] Removing intermediate container 9f5aa473c4f8
+[info] Successfully built 8fdbc30fb900
+[info] imageId = 8fdbc30fb900
+[success] Total time: 2 s, completed 2015/06/01 10:42:58
+[info] containerId = 9b2640f23f2a8c58fa59a7216ce5eeb49b801d06e4097149433bf63827e3dec6, out = Mon Jun 1 01:42:58 UTC 2015
+```
+
+#### StartAndWait
+
+```sh
+$ sbt docker::startAndWait
+[info] Loading project definition from /Users/cw-junichi/sbt-docker/src/sbt-test/sbt-docker/simple/project
+[info] Set current project to simple (in build file:/Users/cw-junichi/sbt-docker/src/sbt-test/sbt-docker/simple/)
+[info] Set(/Users/cw-junichi/sbt-docker/src/sbt-test/sbt-docker/simple/target/docker/Dockerfile, /Users/cw-junichi/sbt-docker/src/sbt-test/sbt-docker/simple/target/docker/bin/date.sh)
+[info] Step 0 : FROM busybox
+[info]  ---> 8c2e06607696
+[info] Step 1 : ADD bin/date.sh /
+[info]  ---> Using cache
+[info]  ---> 17611e6f5cd4
+[info] Step 2 : CMD sh /date.sh
+[info]  ---> Using cache
+[info]  ---> 8fdbc30fb900
+[info] Successfully built 8fdbc30fb900
+[info] imageId = 8fdbc30fb900
+[info] containerId = 0c5f25eead653ea59c22fcfd9b93a1702d78f509ec22db5a727491344932164d, out = Mon Jun 1 01:43:58 UTC 2015
+[success] Total time: 2 s, completed 2015/06/01 10:43:58
+```
+
+
