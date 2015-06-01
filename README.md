@@ -1,13 +1,13 @@
 # sbt-docker
 
 [![Build Status](https://travis-ci.org/chatwork/sbt-docker.svg)](https://travis-ci.org/chatwork/sbt-docker)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.chatwork/sbt-docker_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.chatwork/sbt-docker_2.11)
-[![Scaladoc](http://javadoc-badge.appspot.com/com.chatwork/sbt-docker.svg?label=scaladoc)](http://javadoc-badge.appspot.com/com.chatwork/sbt-docker_2.11)
-[![Reference Status](https://www.versioneye.com/java/com.chatwork:sbt-docker_2.11/reference_badge.svg?style=flat)](https://www.versioneye.com/java/com.chatwork:sbt-docker_2.11/references)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.chatwork/sbt-docker_2.10/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.chatwork/sbt-docker_2.10)
+[![Scaladoc](http://javadoc-badge.appspot.com/com.chatwork/sbt-docker.svg?label=scaladoc)](http://javadoc-badge.appspot.com/com.chatwork/sbt-docker_2.10)
+[![Reference Status](https://www.versioneye.com/java/com.chatwork:sbt-docker_2.10/reference_badge.svg?style=flat)](https://www.versioneye.com/java/com.chatwork:sbt-docker_2.10/references)
 
 ## Installation
 
-Add the following to your `project/plugin.sbt` (Scala 2.10.x, and Scala 2.11.x):
+Add the following to your `project/plugins.sbt` (Scala 2.10.x, and Scala 2.11.x):
 
 ### Release Version
 
