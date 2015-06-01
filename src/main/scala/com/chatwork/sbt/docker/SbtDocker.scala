@@ -50,9 +50,8 @@ trait SbtDocker {
     val t = (dockerfileTemplate in docker).value
     val df = (dockerfile in docker).value
     if (t.exists()) {
-      logger.info("generate docker file from template file.")
-      new DockerfileFreemakerBuilder(t.getParentFile, t.base, c, df).build.get
-      logger.info("generated docker file from template file.")
+      new DockerfileFreemakerBuilder(t.getParentFile, t.getName, c, df).build.get
+      logger.info(s"generated docker file from template file. dockerTemplate = $t, templateContext = $c, dockerfile = $df")
       df
     } else {
       df
@@ -62,7 +61,6 @@ trait SbtDocker {
   def cleanSourceFilesTask: Def.Initialize[Task[Unit]] = Def.task {
     val logger = streams.value.log
     val dst = (buildDirectory in docker).value
-    logger.info(s"delete $dst")
     IO.delete(dst)
     logger.info(s"deleted $dst")
   }
@@ -113,8 +111,10 @@ trait SbtDocker {
     Try {
       if ((login in docker).value) {
         sut.pull(repositoryName, authConfig.value, progressHandler.value)
+        logger.info(s"docker pull $repositoryName")
       } else {
         sut.pull(repositoryName, progressHandler.value)
+        logger.info(s"docker pull $repositoryName")
       }
     }.recover {
       case ex: DockerException =>
@@ -147,6 +147,7 @@ trait SbtDocker {
       val config = ContainerConfig.builder().image(imageId).build()
       val containerCreation = sut.createContainer(config)
       sut.startContainer(containerCreation.id)
+      logger.info(s"docker start, containerId = ${containerCreation.id}")
       Future {
         var logStream: LogStream = null
         try {
@@ -187,7 +188,7 @@ trait SbtDocker {
     val bo = (buildOptions in docker).value.map(toBuildParameter)
     Try {
       val result = sut.build(workDir, repositoryName, progressHandler.value, bo.toArray: _*)
-      logger.info(s"imageId = $result")
+      logger.info(s"docker build, imageId = $result")
       Some(result)
     }.recover {
       case ex: DockerException =>
