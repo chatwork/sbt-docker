@@ -1,3 +1,7 @@
 > clean
 
 > docker::startAndWait
+
+> docker::push
+
+> docker::pull
