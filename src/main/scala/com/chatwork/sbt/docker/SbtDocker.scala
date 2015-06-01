@@ -35,11 +35,12 @@ trait SbtDocker {
     }
   }
 
-  lazy val progressHandler = Def.task {
-    val logger = streams.value.log
+  def progressHandler(logger: Logger)(f: ProgressMessage => Option[String]) = {
     new ProgressHandler() {
       override def progress(progressMessage: ProgressMessage): Unit = {
-        logger.info(progressMessage.stream())
+        if (progressMessage != null) {
+          f(progressMessage).foreach(e => logger.info(e))
+        }
       }
     }
   }
@@ -97,7 +98,28 @@ trait SbtDocker {
     val sut = dockerClient.value
     val repositoryName = (name in docker).value
     Try {
-      sut.push(repositoryName, progressHandler.value)
+      if ((login in docker).value) {
+        sut.auth(authConfig.value)
+        sut.push(repositoryName, progressHandler(logger) { pm =>
+          Some(
+            Seq(
+              Option(pm.id).map(e => s"id = $e").toSeq,
+              Option(pm.status).map(e => s"status = $e").toSeq,
+              Option(pm.error()).map(e => s"error = $e").toSeq
+            ).flatten.mkString(", ")
+          )
+        })
+      } else {
+        sut.push(repositoryName, progressHandler(logger) { pm =>
+          Some(
+            Seq(
+              Option(pm.id).map(e => s"id = $e").toSeq,
+              Option(pm.status).map(e => s"status = $e").toSeq,
+              Option(pm.error()).map(e => s"error = $e").toSeq
+            ).flatten.mkString(", ")
+          )
+        })
+      }
     }.recover {
       case ex: DockerException =>
         logger.error(ex.toString)
@@ -110,10 +132,26 @@ trait SbtDocker {
     val repositoryName = (name in docker).value
     Try {
       if ((login in docker).value) {
-        sut.pull(repositoryName, authConfig.value, progressHandler.value)
+        sut.pull(repositoryName, authConfig.value, progressHandler(logger) { pm =>
+          Some(
+            Seq(
+              Option(pm.id).map(e => s"id = $e").toSeq,
+              Option(pm.status).map(e => s"status = $e").toSeq,
+              Option(pm.error()).map(e => s"error = $e").toSeq
+            ).flatten.mkString(", ")
+          )
+        })
         logger.info(s"docker pull $repositoryName")
       } else {
-        sut.pull(repositoryName, progressHandler.value)
+        sut.pull(repositoryName, progressHandler(logger) { pm =>
+          Some(
+            Seq(
+              Option(pm.id).map(e => s"id = $e").toSeq,
+              Option(pm.status).map(e => s"status = $e").toSeq,
+              Option(pm.error()).map(e => s"error = $e").toSeq
+            ).flatten.mkString(", ")
+          )
+        })
         logger.info(s"docker pull $repositoryName")
       }
     }.recover {
@@ -187,7 +225,7 @@ trait SbtDocker {
     val repositoryName = (name in docker).value
     val bo = (buildOptions in docker).value.map(toBuildParameter)
     Try {
-      val result = sut.build(workDir, repositoryName, progressHandler.value, bo.toArray: _*)
+      val result = sut.build(workDir, repositoryName, progressHandler(logger) { pm => Some(pm.stream()) }, bo.toArray: _*)
       logger.info(s"docker build, imageId = $result")
       Some(result)
     }.recover {
