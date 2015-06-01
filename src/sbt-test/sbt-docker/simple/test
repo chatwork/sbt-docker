@@ -1,5 +1,3 @@
 > clean
 
-> docker::build
-
-> docker::start
+> docker::startAndWait
