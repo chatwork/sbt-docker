@@ -96,4 +96,39 @@ $ sbt docker::startAndWait
 [success] Total time: 2 s, completed 2015/06/01 10:43:58
 ```
 
+### Dockerfile template support
 
+- Put Dockefile.ftl to source directory.
+
+```
+ + project-root directory
+   + docker
+     + Dockerfile.ftl
+     + etc
+```
+
+- Set context values to build.sbt as follows.
+
+```scala
+templateContext in docker := Map(
+    "name" -> (name in thisProjectRef).value,
+    "version" -> (version in thisProjectRef).value
+)
+```
+
+- Set reference to context values into Dockerfile.ftl 
+
+Dockerfile.ftl
+
+```
+FROM busybox
+ADD bin/echo.sh /
+CMD ["sh", "/echo.sh", "${name}-${version}"]
+```
+
+echo.sh
+
+```
+#!/bin/sh
+echo $1
+```
