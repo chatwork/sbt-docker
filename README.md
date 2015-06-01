@@ -59,7 +59,7 @@ BuildOptions in docker := Seq(ForceRm)
 ```sh
 $ sbt
 > docker::start
-info] Set(/Users/cw-junichi/sbt-docker/src/sbt-test/sbt-docker/simple/target/docker/Dockerfile, /Users/cw-junichi/sbt-docker/src/sbt-test/sbt-docker/simple/target/docker/bin/date.sh)
+info] Set(/Users/j5ik2o/sbt-docker/src/sbt-test/sbt-docker/simple/target/docker/Dockerfile, /Users/j5ik2o/sbt-docker/src/sbt-test/sbt-docker/simple/target/docker/bin/date.sh)
 [info] Step 0 : FROM busybox
 [info]  ---> 8c2e06607696
 [info] Step 1 : ADD bin/date.sh /
@@ -79,9 +79,9 @@ info] Set(/Users/cw-junichi/sbt-docker/src/sbt-test/sbt-docker/simple/target/doc
 
 ```sh
 $ sbt docker::startAndWait
-[info] Loading project definition from /Users/cw-junichi/sbt-docker/src/sbt-test/sbt-docker/simple/project
-[info] Set current project to simple (in build file:/Users/cw-junichi/sbt-docker/src/sbt-test/sbt-docker/simple/)
-[info] Set(/Users/cw-junichi/sbt-docker/src/sbt-test/sbt-docker/simple/target/docker/Dockerfile, /Users/cw-junichi/sbt-docker/src/sbt-test/sbt-docker/simple/target/docker/bin/date.sh)
+[info] Loading project definition from /Users/j5ik2o/sbt-docker/src/sbt-test/sbt-docker/simple/project
+[info] Set current project to simple (in build file:/Users/j5ik2o/sbt-docker/src/sbt-test/sbt-docker/simple/)
+[info] Set(/Users/j5ik2o/sbt-docker/src/sbt-test/sbt-docker/simple/target/docker/Dockerfile, /Users/j5ik2o/sbt-docker/src/sbt-test/sbt-docker/simple/target/docker/bin/date.sh)
 [info] Step 0 : FROM busybox
 [info]  ---> 8c2e06607696
 [info] Step 1 : ADD bin/date.sh /
@@ -95,6 +95,46 @@ $ sbt docker::startAndWait
 [info] containerId = 0c5f25eead653ea59c22fcfd9b93a1702d78f509ec22db5a727491344932164d, out = Mon Jun 1 01:43:58 UTC 2015
 [success] Total time: 2 s, completed 2015/06/01 10:43:58
 ```
+
+#### Push/Pull
+
+```sh
+$ sbt docker::push
+<snip>
+[info] status = The push refers to a repository [j5ik2o/test] (len: 1)
+[info] id = 5ed02c7da45e, status = Buffering to Disk
+[info] id = 5ed02c7da45e, status = Pushing
+[info] id = 5ed02c7da45e, status = Pushing
+[info] id = 5ed02c7da45e, status = Pushing
+[info] id = 5ed02c7da45e, status = Image successfully pushed
+[info] id = 5ed02c7da45e, status = Image already exists
+[info] id = 4ddab5d60536, status = Buffering to Disk
+[info] id = 4ddab5d60536, status = Pushing
+[info] id = 4ddab5d60536, status = Pushing
+[info] id = 4ddab5d60536, status = Image successfully pushed
+[info] id = 8c2e06607696, status = Image already exists
+[info] id = 6ce2e90b0bc7, status = Image already exists
+[info] id = cf2616975b4a, status = Image already exists
+[info] status = Digest: sha256:3bc3b648e03564b87e8962bfc7b2c1e2c3a58a75a5c8bdbd2dd1c5293087094d
+```
+
+```sh
+$ sbt docker::pull
+[info] status = Pulling repository j5ik2o/test
+[info] id = 0ebb5ffaa96c, status = Pulling image (latest) from j5ik2o/test
+[info] id = 0ebb5ffaa96c, status = Pulling image (latest) from j5ik2o/test, endpoint: https://registry-1.docker.io/v1/
+[info] id = 0ebb5ffaa96c, status = Pulling dependent layers
+[info] id = cf2616975b4a, status = Download complete
+[info] id = 6ce2e90b0bc7, status = Download complete
+[info] id = 8c2e06607696, status = Download complete
+[info] id = f18371e6f7ab, status = Download complete
+[info] id = 0ebb5ffaa96c, status = Download complete
+[info] id = 0ebb5ffaa96c, status = Download complete
+[info] status = Status: Image is up to date for j5ik2o/test
+```
+
+
+
 
 ### Dockerfile template support
 
