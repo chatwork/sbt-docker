@@ -21,9 +21,11 @@ object SbtDocker extends SbtDocker
 trait SbtDocker {
 
   lazy val authConfig = Def.task {
+    val logger = streams.value.log
     val e = (emailAddress in docker).value
     val p = (password in docker).value
     val u = (userName in docker).value
+    logger.info(s"userName = $u, emailAddress = $e")
     AuthConfig.builder().username(u).email(e).password(p).build()
   }
 
