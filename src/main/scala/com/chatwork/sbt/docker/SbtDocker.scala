@@ -71,9 +71,12 @@ trait SbtDocker {
     val dst = (buildDirectory in docker).value
     val src = (sourceDirectory in docker).value
 
-    val files = ((sourceFiles in docker).value :+ generateDockerfileTask.value).map { file =>
-      (file, dst / IO.relativize(src, file).get)
-    }
+    val gFile = (generateDockerfile in docker).value
+
+    val files = (sourceFiles in docker).value.map {
+      case (file, path) =>
+        (file, dst / path)
+    } :+ (gFile, dst / IO.relativize(src, gFile).get)
 
     if (!dst.exists()) {
       IO.createDirectory(dst)

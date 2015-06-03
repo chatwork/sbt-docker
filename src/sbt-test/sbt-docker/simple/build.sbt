@@ -7,8 +7,8 @@ name in docker := "j5ik2o/test"
 sourceFiles in docker := {
   val src = (sourceDirectory in docker).value
   Seq(
-    src / "Dockerfile",
-    src / "bin" / "echo.sh"
+    (src / "Dockerfile",  "Dockerfile"),
+    (src / "bin" / "echo.sh", "bin/echo.sh")
   )
 }
 

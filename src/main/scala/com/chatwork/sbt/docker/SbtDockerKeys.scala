@@ -20,7 +20,7 @@ trait SbtDockerKeys {
 
   // ---
 
-  val sourceFiles = settingKey[Seq[File]]("source-files")
+  val sourceFiles = taskKey[Seq[(File, String)]]("source-files")
 
   val copySourceFiles = taskKey[Set[File]]("copy-source-files")
 
@@ -39,6 +39,8 @@ trait SbtDockerKeys {
   val dockerfile = settingKey[File]("dockerfile")
 
   val templateContext = settingKey[Map[String, String]]("template-context")
+
+  val generateDockerfile = taskKey[File]("generate-dockerfile")
 
   // ---
 

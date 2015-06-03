@@ -33,6 +33,7 @@ object SbtDockerPlugin extends AutoPlugin {
       "name" -> (name in thisProjectRef).value,
       "version" -> (version in thisProjectRef).value
     ),
+    generateDockerfile in docker <<= generateDockerfileTask,
     push in docker <<= dockerPushTask,
     pull in docker <<= dockerPullTask,
     list in docker <<= dockerListImagesTask,
