@@ -32,13 +32,13 @@ trait SbtDocker {
   lazy val dockerClient = Def.task {
     if ((login in docker).value) {
       DefaultDockerClient.fromEnv().authConfig(authConfig.value)
-        .readTimeoutMillis(clientReadTimeoutMillis.value)
-        .connectTimeoutMillis(clientConnectTimeoutMillis.value)
+        .readTimeoutMillis((clientReadTimeoutMillis in docker).value)
+        .connectTimeoutMillis((clientConnectTimeoutMillis in docker).value)
         .build()
     } else {
       DefaultDockerClient.fromEnv()
-        .readTimeoutMillis(clientReadTimeoutMillis.value)
-        .connectTimeoutMillis(clientConnectTimeoutMillis.value)
+        .readTimeoutMillis((clientReadTimeoutMillis in docker).value)
+        .connectTimeoutMillis((clientConnectTimeoutMillis in docker).value)
         .build()
     }
   }
