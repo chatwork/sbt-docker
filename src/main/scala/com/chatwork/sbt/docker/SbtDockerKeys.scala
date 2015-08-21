@@ -32,6 +32,10 @@ trait SbtDockerKeys {
 
   val buildDirectory = settingKey[File]("build-directory")
 
+  val clientConnectTimeoutMillis = settingKey[Long]("docker-client-connection-timeout-in-millis")
+
+  val clientReadTimeoutMillis = settingKey[Long]("docker-client-read-timeout-in-millis")
+
   // ---
 
   val dockerfileTemplate = settingKey[File]("dockerfile-template")

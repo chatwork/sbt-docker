@@ -29,9 +29,15 @@ trait SbtDocker {
 
   lazy val dockerClient = Def.task {
     if ((login in docker).value) {
-      DefaultDockerClient.fromEnv().authConfig(authConfig.value).build()
+      DefaultDockerClient.fromEnv().authConfig(authConfig.value)
+        .readTimeoutMillis(clientReadTimeoutMillis.value)
+        .connectTimeoutMillis(clientConnectTimeoutMillis.value)
+        .build()
     } else {
-      DefaultDockerClient.fromEnv().build()
+      DefaultDockerClient.fromEnv()
+        .readTimeoutMillis(clientReadTimeoutMillis.value)
+        .connectTimeoutMillis(clientConnectTimeoutMillis.value)
+        .build()
     }
   }
 
