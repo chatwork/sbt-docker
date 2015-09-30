@@ -48,7 +48,7 @@ $ sbt docker::build
 
 - build options
 
-If you want to set `--form-rm=true` option, `BuildOptions` will be as follow. 
+If you want to set `--force-rm=true` option, `BuildOptions` will be as follow. 
 
 ```scala
 BuildOptions in docker := Seq(ForceRm)
