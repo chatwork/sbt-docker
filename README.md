@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/chatwork/sbt-docker.svg)](https://travis-ci.org/chatwork/sbt-docker)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.chatwork/sbt-docker/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.chatwork/sbt-docker)
-[![Scaladoc](http://javadoc-badge.appspot.com/com.chatwork/sbt-docker.svg?label=scaladoc)](http://javadoc-badge.appspot.com/com.chatwork/sbt-docker_2.10)
+[![Scaladoc](http://javadoc-badge.appspot.com/com.chatwork/sbt-docker_2.11.svg?label=scaladoc)](http://javadoc-badge.appspot.com/com.chatwork/sbt-docker_2.11)
 [![Reference Status](https://www.versioneye.com/java/com.chatwork:sbt-docker_2.10/reference_badge.svg?style=flat)](https://www.versioneye.com/java/com.chatwork:sbt-docker_2.10/references)
 
 ## Installation
