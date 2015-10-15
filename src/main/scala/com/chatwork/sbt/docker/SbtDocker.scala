@@ -109,6 +109,7 @@ trait SbtDocker {
     val sut = dockerClient.value
     val repositoryName = (name in docker).value
     Try {
+      var error: Option[DockerException] = None
       if ((login in docker).value) {
         sut.auth(authConfig.value)
         sut.push(repositoryName, progressHandler(logger) { pm =>
@@ -116,7 +117,10 @@ trait SbtDocker {
             Seq(
               Option(pm.id).map(e => s"id = $e").toSeq,
               Option(pm.status).map(e => s"status = $e").toSeq,
-              Option(pm.error()).map(e => s"error = $e").toSeq
+              Option(pm.error()).map(e => {
+                error = Some(new DockerException(s"$e"))
+                s"error = $e"
+              }).toSeq
             ).flatten.mkString(", ")
           )
         })
@@ -126,14 +130,19 @@ trait SbtDocker {
             Seq(
               Option(pm.id).map(e => s"id = $e").toSeq,
               Option(pm.status).map(e => s"status = $e").toSeq,
-              Option(pm.error()).map(e => s"error = $e").toSeq
+              Option(pm.error()).map(e => {
+                error = Some(new DockerException(s"$e"))
+                s"error = $e"
+              }).toSeq
             ).flatten.mkString(", ")
           )
         })
       }
+      error.foreach(throw _)
     }.recover {
       case ex: DockerException =>
         logger.error(ex.toString)
+        throw ex
     }.get
   }
 
@@ -142,13 +151,17 @@ trait SbtDocker {
     val sut = dockerClient.value
     val repositoryName = (name in docker).value
     Try {
+      var error: Option[DockerException] = None
       if ((login in docker).value) {
         sut.pull(repositoryName, authConfig.value, progressHandler(logger) { pm =>
           Some(
             Seq(
               Option(pm.id).map(e => s"id = $e").toSeq,
               Option(pm.status).map(e => s"status = $e").toSeq,
-              Option(pm.error()).map(e => s"error = $e").toSeq
+              Option(pm.error()).map(e => {
+                error = Some(new DockerException(s"$e"))
+                s"error = $e"
+              }).toSeq
             ).flatten.mkString(", ")
           )
         })
@@ -159,15 +172,20 @@ trait SbtDocker {
             Seq(
               Option(pm.id).map(e => s"id = $e").toSeq,
               Option(pm.status).map(e => s"status = $e").toSeq,
-              Option(pm.error()).map(e => s"error = $e").toSeq
+              Option(pm.error()).map(e => {
+                error = Some(new DockerException(s"$e"))
+                s"error = $e"
+              }).toSeq
             ).flatten.mkString(", ")
           )
         })
+        error.foreach(throw _)
         logger.info(s"docker pull $repositoryName")
       }
     }.recover {
       case ex: DockerException =>
         logger.error(ex.toString)
+        throw ex
     }.get
   }
 
@@ -236,8 +254,14 @@ trait SbtDocker {
     val repositoryName = (name in docker).value
     val bo = (buildOptions in docker).value.map(toBuildParameter)
     Try {
-      val result = sut.build(workDir, repositoryName, progressHandler(logger) { pm => Some(pm.stream()) }, bo.toArray: _*)
+      var error: Option[DockerException] = None
+      val result = sut.build(workDir, repositoryName,
+        progressHandler(logger) { pm =>
+          Option(pm.error()).foreach { msg => error = Option(new DockerException(msg)) }
+          Some(pm.stream())
+        }, bo.toArray: _*)
       logger.info(s"docker build, imageId = $result")
+      error.foreach(throw _)
       Some(result)
     }.recover {
       case ex: DockerException =>
