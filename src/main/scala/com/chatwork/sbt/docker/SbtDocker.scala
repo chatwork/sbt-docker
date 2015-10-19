@@ -258,11 +258,11 @@ trait SbtDocker {
       val result = sut.build(workDir, repositoryName,
         progressHandler(logger) { pm =>
           Option(pm.error()).foreach { msg => error = Option(new DockerException(msg)) }
-          Some(pm.stream())
+          Option(pm.stream())
         }, bo.toArray: _*)
       logger.info(s"docker build, imageId = $result")
       error.foreach(throw _)
-      Some(result)
+      Option(result)
     }.recover {
       case ex: DockerException =>
         logger.error(ex.toString)
