@@ -266,6 +266,7 @@ trait SbtDocker {
     }.recover {
       case ex: DockerException =>
         logger.error(ex.toString)
+        throw ex
         None
     }.get
   }
