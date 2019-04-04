@@ -2,18 +2,18 @@ package com.chatwork.sbt.docker
 
 import java.text.SimpleDateFormat
 
-import com.chatwork.sbt.docker.SbtDockerKeys._
+import com.chatwork.sbt.docker.SbtDockerKeys.{clientConnectTimeoutMillis, _}
 import com.google.common.base.Charsets
-import com.spotify.docker.client.DockerClient.{ AttachParameter, BuildParameter, ListImagesParam }
+import com.spotify.docker.client.DockerClient.{AttachParameter, BuildParameter, ListImagesParam}
 import com.spotify.docker.client._
-import com.spotify.docker.client.messages.{ AuthConfig, ContainerConfig, ProgressMessage }
+import com.spotify.docker.client.messages.{AuthConfig, ContainerConfig, ProgressMessage}
 import sbt.Keys._
 import sbt._
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 import scala.util.Try
 
 object SbtDocker extends SbtDocker
@@ -29,17 +29,23 @@ trait SbtDocker {
     AuthConfig.builder().username(u).email(e).password(p).build()
   }
 
-  lazy val dockerClient = Def.task {
-    if ((login in docker).value) {
-      DefaultDockerClient.fromEnv().authConfig(authConfig.value)
-        .readTimeoutMillis((clientReadTimeoutMillis in docker).value)
-        .connectTimeoutMillis((clientConnectTimeoutMillis in docker).value)
-        .build()
-    } else {
-      DefaultDockerClient.fromEnv()
-        .readTimeoutMillis((clientReadTimeoutMillis in docker).value)
-        .connectTimeoutMillis((clientConnectTimeoutMillis in docker).value)
-        .build()
+  lazy val dockerClient = Def.taskDyn {
+    val loginValue = (login in docker).value
+    val authConfigValue = authConfig.value
+    val clientReadTimeoutMillisValue =  (clientReadTimeoutMillis in docker).value
+    val clientConnectTimeoutMillisValue = (clientConnectTimeoutMillis in docker).value
+    Def.task {
+      if (loginValue) {
+        DefaultDockerClient.fromEnv().authConfig(authConfigValue)
+          .readTimeoutMillis(clientReadTimeoutMillisValue)
+          .connectTimeoutMillis(clientConnectTimeoutMillisValue)
+          .build()
+      } else {
+        DefaultDockerClient.fromEnv()
+          .readTimeoutMillis(clientReadTimeoutMillisValue)
+          .connectTimeoutMillis(clientConnectTimeoutMillisValue)
+          .build()
+      }
     }
   }
 

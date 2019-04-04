@@ -25,22 +25,22 @@ object SbtDockerPlugin extends AutoPlugin {
     userName in docker := "",
     password in docker := "",
     buildOptions in docker := Set.empty[BuildOptions.Value],
-    build in docker <<= dockerBuildTask dependsOn (copySourceFiles in docker),
+    build in docker := (dockerBuildTask dependsOn (copySourceFiles in docker)).value,
     clientReadTimeoutMillis in docker := 5000L,
     clientConnectTimeoutMillis in docker := 30000L,
-    copySourceFiles in docker <<= copySourceFilesTask,
+    copySourceFiles in docker := copySourceFilesTask.value,
     dockerfileTemplate in docker := (sourceDirectory in docker).value / "Dockerfile.ftl",
     dockerfile in docker := (sourceDirectory in docker).value / "Dockerfile",
     templateContext in docker := Map(
       "name" -> (name in thisProjectRef).value,
       "version" -> (version in thisProjectRef).value
     ),
-    generateDockerfile in docker <<= generateDockerfileTask,
-    push in docker <<= dockerPushTask,
-    pull in docker <<= dockerPullTask,
-    list in docker <<= dockerListImagesTask,
-    start in docker <<= dockerStartTask dependsOn (copySourceFiles in docker),
-    startAndWait in docker <<= dockerStartAndWaitTask dependsOn (copySourceFiles in docker)
+    generateDockerfile in docker := generateDockerfileTask.value,
+    push in docker := dockerPushTask.value,
+    pull in docker := dockerPullTask.value,
+    list in docker := dockerListImagesTask.value,
+    start in docker := (dockerStartTask dependsOn (copySourceFiles in docker)).value,
+    startAndWait in docker := (dockerStartAndWaitTask dependsOn (copySourceFiles in docker)).value
   )
 
 }
