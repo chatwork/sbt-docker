@@ -1,6 +1,31 @@
-import scalariform.formatter.preferences._
+import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
+import xerial.sbt.Sonatype.autoImport._
 
-scalaVersion := "2.10.5"
+releasePublishArtifactsAction := PgpKeys.publishSigned.value
+
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  setReleaseVersion,
+  commitReleaseVersion,
+  tagRelease,
+  releaseStepCommandAndRemaining("^ publishSigned"),
+  setNextVersion,
+  commitNextVersion,
+  releaseStepCommand("sonatypeReleaseAll"),
+  pushChanges
+)
+
+val sbtCrossVersion = sbtVersion in pluginCrossBuild
+
+scalaVersion := (CrossVersion partialVersion sbtCrossVersion.value match {
+  case Some((0, 13)) => "2.10.6"
+  case Some((1, _))  => "2.12.4"
+  case _             => sys error s"Unhandled sbt version ${sbtCrossVersion.value}"
+})
+
+crossSbtVersions := Seq("0.13.16", "1.0.4")
 
 sonatypeProfileName := "com.chatwork"
 
@@ -9,6 +34,8 @@ organization := "com.chatwork"
 publishMavenStyle := true
 
 publishArtifact in Test := false
+
+publishTo := sonatypePublishTo.value
 
 pomIncludeRepository := {
   _ => false
@@ -47,23 +74,10 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "com.spotify" % "docker-client" % "2.7.7",
-  "ch.qos.logback" % "logback-classic" % "1.1.3",
-  "org.slf4j" % "slf4j-api" % "1.7.12",
-  "org.freemarker" % "freemarker" % "2.3.14"
+  // "com.spotify" % "docker-client" % "8.15.1",
+  "ch.qos.logback" % "logback-classic" % "1.2.3",
+  "org.slf4j" % "slf4j-api" % "1.7.26",
+  "org.freemarker" % "freemarker" % "2.3.28"
 )
 
-scalariformSettings
-
-ScalariformKeys.preferences :=
-  ScalariformKeys.preferences.value
-    .setPreference(AlignParameters, true)
-    .setPreference(AlignSingleLineCaseStatements, true)
-    .setPreference(DoubleIndentClassDeclaration, true)
-    .setPreference(PreserveDanglingCloseParenthesis, true)
-    .setPreference(MultilineScaladocCommentsStartOnFirstLine, false)
-
-credentials <<= Def.task {
-  val ivyCredentials = (baseDirectory in LocalRootProject).value / ".credentials"
-  val result = Credentials(ivyCredentials) :: Nil
-  result
-}
+credentials += Credentials((baseDirectory in LocalRootProject).value / ".credentials")
