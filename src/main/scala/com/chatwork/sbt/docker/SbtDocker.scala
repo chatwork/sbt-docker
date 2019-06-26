@@ -1,12 +1,15 @@
 package com.chatwork.sbt.docker
 
 import java.text.SimpleDateFormat
+import java.util.Collections.singletonMap
 
 import com.chatwork.sbt.docker.SbtDockerKeys.{clientConnectTimeoutMillis, _}
-import com.google.common.base.Charsets
-import com.spotify.docker.client.DockerClient.{AttachParameter, BuildParameter, ListImagesParam}
+import com.google.common.base.{Charsets, MoreObjects}
+import com.spotify.docker.client.DockerClient.{AttachParameter, BuildParam, ListImagesParam}
 import com.spotify.docker.client._
-import com.spotify.docker.client.messages.{AuthConfig, ContainerConfig, ProgressMessage}
+import com.spotify.docker.client.auth.FixedRegistryAuthSupplier
+import com.spotify.docker.client.exceptions.DockerException
+import com.spotify.docker.client.messages.{ContainerConfig, ProgressMessage, RegistryAuth, RegistryConfigs}
 import sbt.Keys._
 import sbt._
 
@@ -26,7 +29,12 @@ trait SbtDocker {
     val p = (password in docker).value
     val u = (userName in docker).value
     logger.info(s"userName = $u, emailAddress = $e")
-    AuthConfig.builder().username(u).email(e).password(p).build()
+
+    RegistryAuth.builder()
+      .email(e)
+      .username(u)
+      .password(p)
+      .build()
   }
 
   lazy val dockerClient = Def.taskDyn {
@@ -36,11 +44,12 @@ trait SbtDocker {
     val clientConnectTimeoutMillisValue = (clientConnectTimeoutMillis in docker).value
     Def.task {
       if (loginValue) {
-        DefaultDockerClient.fromEnv().authConfig(authConfigValue)
-          .readTimeoutMillis(clientReadTimeoutMillisValue)
-          .connectTimeoutMillis(clientConnectTimeoutMillisValue)
-          .build()
-      } else {
+        val configs = RegistryConfigs.create(singletonMap(MoreObjects.firstNonNull(authConfigValue.serverAddress, ""), authConfigValue))
+        val registryAuthSupplier = new FixedRegistryAuthSupplier(authConfigValue, configs)
+        DefaultDockerClient.fromEnv().registryAuthSupplier(registryAuthSupplier)
+        .readTimeoutMillis(clientReadTimeoutMillisValue)
+        .connectTimeoutMillis(clientConnectTimeoutMillisValue)
+        .build() } else {
         DefaultDockerClient.fromEnv()
           .readTimeoutMillis(clientReadTimeoutMillisValue)
           .connectTimeoutMillis(clientConnectTimeoutMillisValue)
@@ -101,12 +110,12 @@ trait SbtDocker {
     result
   }
 
-  def toBuildParameter(bo: BuildOptions.Value): BuildParameter = {
+  def toBuildParameter(bo: BuildOptions.Value): BuildParam = {
     bo match {
-      case BuildOptions.Quiet   => BuildParameter.QUIET
-      case BuildOptions.NoCache => BuildParameter.NO_CACHE
-      case BuildOptions.NoRm    => BuildParameter.NO_RM
-      case BuildOptions.ForceRm => BuildParameter.FORCE_RM
+      case BuildOptions.Quiet   => BuildParam.quiet()
+      case BuildOptions.NoCache => BuildParam.noCache()
+      case BuildOptions.NoRm    => BuildParam.rm(false)
+      case BuildOptions.ForceRm => BuildParam.forceRm()
     }
   }
 

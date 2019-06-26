@@ -15,7 +15,7 @@ trait DockerfileBuilder {
 
 class DockerfileFreemakerBuilder(base: File, templateName: String, context: Map[String, String], dest: File) extends DockerfileBuilder {
 
-  private val cfg = new freemarker.template.Configuration
+  private val cfg = new freemarker.template.Configuration(freemarker.template.Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS)
   cfg.setDirectoryForTemplateLoading(base)
 
   override def build: Try[Unit] = Try {

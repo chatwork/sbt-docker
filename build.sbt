@@ -73,11 +73,20 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.spotify" % "docker-client" % "2.7.7",
-  // "com.spotify" % "docker-client" % "8.15.1",
+  // "com.spotify" % "docker-client" % "2.7.7",
+  "com.spotify" % "docker-client" % "8.15.1",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
   "org.slf4j" % "slf4j-api" % "1.7.26",
   "org.freemarker" % "freemarker" % "2.3.28"
 )
 
 credentials += Credentials((baseDirectory in LocalRootProject).value / ".credentials")
+
+scriptedBufferLog := false
+
+scriptedLaunchOpts := {
+  scriptedLaunchOpts.value ++
+    Seq("-Xmx1024M", "-Dproject.version=" + version.value)
+}
+
+scriptedBufferLog := false

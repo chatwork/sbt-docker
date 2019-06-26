@@ -4,6 +4,12 @@ name := "simple"
 
 name in docker := "j5ik2o/test"
 
+login in docker := true
+
+emailAddress in docker := "j5ik2o@gmail.com"
+
+userName in docker := "j5ik2o"
+
 sourceFiles in docker := {
   val src = (sourceDirectory in docker).value
   Seq(
